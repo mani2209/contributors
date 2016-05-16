@@ -16,8 +16,9 @@ function show_contributor( $content ) {
     $strContributors = get_post_meta(get_the_ID() , 'meta_box_contributor' , true);
     $arrContributors = unserialize($strContributors);
 
+    $custom_content .= "Contributors<br>";
     foreach ($arrContributors as $strKey => $strValue) {
-    	# code...
+    	
     	$arrUserData = get_userdata($strValue);
     	$gAvtar = get_avatar( $strValue, 32 );
     	$aUrl = get_author_posts_url($strValue);
