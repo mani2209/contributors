@@ -18,15 +18,17 @@ function show_contributor( $content ) {
 
     $custom_content .= "Contributors<br>";
     foreach ($arrContributors as $strKey => $strValue) {
-    	
-    	$arrUserData = get_userdata($strValue);
-    	$gAvtar = get_avatar( $strValue, 32 );
-    	$aUrl = get_author_posts_url($strValue);
-    	$custom_content .= $gAvtar."<a href='".$aUrl."'>".$arrUserData->user_nicename."</a><br>";
+        
+
+        $arrUserData = get_userdata($strValue);
+        $gAvtar = get_avatar( $strValue, 32 );
+        $aUrl = get_author_posts_url($strValue);
+        $custom_content .= $gAvtar."<a href='".$aUrl."'>".$arrUserData->user_nicename."</a><br>";
     }
 
     return $custom_content;
     } 
+    return $content;
 }
 add_filter( 'the_content', 'show_contributor' );
 
@@ -45,20 +47,20 @@ function meta_box_callback( $post )
 
     $users_array = get_contributors();
    
-
-    foreach ($users_array as $strKey => $strValue) { 
-    		$checked = "";
-    		if(in_array($strValue->ID, $arrContributors)){
-    			$checked = "checked";
-    		}
-    	?>
-    	<input type="checkbox" name="contributors[]" <?php echo $checked; ?> value="<?php echo $strValue->ID; ?>"><?php echo $strValue->user_nicename; ?><br />
-    <?php }
-    
+    if($users_array):
+        foreach ($users_array as $strKey => $strValue) { 
+                $checked = "";
+                if(in_array($strValue->ID, $arrContributors)){
+                    $checked = "checked";
+                }
+            ?>
+            <input type="checkbox" name="contributors[]" <?php echo $checked; ?> value="<?php echo $strValue->ID; ?>"><?php echo $strValue->user_nicename; ?><br />
+        <?php }
+    endif;    
 }
 
-add_action( 'save_post', 'meta_box_video_save' );
-function meta_box_video_save( $post_id )
+add_action( 'save_post', 'meta_box_contributor_save' );
+function meta_box_contributor_save( $post_id )
 { 
     // Bail if we're doing an auto save
     if( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
@@ -77,7 +79,7 @@ function meta_box_video_save( $post_id )
     // Probably a good idea to make sure your data is set
 
     if( isset( $_POST['contributors'] ) ):
-    	$strContributors = serialize($_POST['contributors']);
+        $strContributors = serialize($_POST['contributors']);
         update_post_meta( $post_id, 'meta_box_contributor', $strContributors );
 
     endif;
@@ -100,7 +102,7 @@ function get_contributors() {
     endforeach;
 
     foreach ($users as $key => $value) {
-    	$arrUser[] = $value->data;
+        $arrUser[] = $value->data;
     }
 
     return $arrUser;
