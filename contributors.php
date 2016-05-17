@@ -23,7 +23,13 @@ function show_contributor( $content ) {
         $arrUserData = get_userdata($strValue);
         $gAvtar = get_avatar( $strValue, 32 );
         $aUrl = get_author_posts_url($strValue);
-        $custom_content .= $gAvtar."<a href='".$aUrl."'>".$arrUserData->user_nicename."</a><br>";
+        if($arrUserData->display_name){
+            $strDisplayName = $arrUserData->display_name;
+        }else{
+            $strDisplayName = $arrUserData->user_nicename;
+        }
+         
+        $custom_content .= $gAvtar."<a href='".$aUrl."'>".$strDisplayName."</a><br>";
     }
 
     return $custom_content;
@@ -46,16 +52,23 @@ function meta_box_callback( $post )
     $arrContributors = unserialize($strContributors);
 
     $users_array = get_contributors();
+    global $current_user;
    
     if($users_array):
         foreach ($users_array as $strKey => $strValue) { 
+            if($current_user->ID != $strValue->ID):
                 $checked = "";
                 if(in_array($strValue->ID, $arrContributors)){
                     $checked = "checked";
                 }
+                if($strValue->display_name){
+                    $strDisplayName = $strValue->display_name;
+                }else{
+                    $strDisplayName = $strValue->user_nicename;
+                }
             ?>
-            <input type="checkbox" name="contributors[]" <?php echo $checked; ?> value="<?php echo $strValue->ID; ?>"><?php echo $strValue->user_nicename; ?><br />
-        <?php }
+            <input type="checkbox" name="contributors[]" <?php echo $checked; ?> value="<?php echo $strValue->ID; ?>"><?php echo $strDisplayName; ?><br />
+        <?php endif; }
     endif;    
 }
 
