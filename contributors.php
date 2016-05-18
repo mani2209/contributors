@@ -15,23 +15,26 @@ function show_contributor( $content ) {
 
     $strContributors = get_post_meta(get_the_ID() , 'meta_box_contributor' , true);
     $arrContributors = unserialize($strContributors);
+    $post_author = get_post_field( 'post_author', get_the_ID() );
+    $arrContributors[] = $post_author;
+    
+    if($arrContributors):
+        $custom_content .= "Contributors<br>";
+        foreach ($arrContributors as $strKey => $strValue) {
+            
 
-    $custom_content .= "Contributors<br>";
-    foreach ($arrContributors as $strKey => $strValue) {
-        
-
-        $arrUserData = get_userdata($strValue);
-        $gAvtar = get_avatar( $strValue, 32 );
-        $aUrl = get_author_posts_url($strValue);
-        if($arrUserData->display_name){
-            $strDisplayName = $arrUserData->display_name;
-        }else{
-            $strDisplayName = $arrUserData->user_nicename;
+            $arrUserData = get_userdata($strValue);
+            $gAvtar = get_avatar( $strValue, 32 );
+            $aUrl = get_author_posts_url($strValue);
+            if($arrUserData->display_name){
+                $strDisplayName = $arrUserData->display_name;
+            }else{
+                $strDisplayName = $arrUserData->user_nicename;
+            }
+             
+            $custom_content .= $gAvtar."<a href='".$aUrl."'>".$strDisplayName."</a><br>";
         }
-         
-        $custom_content .= $gAvtar."<a href='".$aUrl."'>".$strDisplayName."</a><br>";
-    }
-
+    endif;
     return $custom_content;
     } 
     return $content;
@@ -49,27 +52,32 @@ function meta_box_callback( $post )
 {
    
     $strContributors = get_post_meta($post->ID , 'meta_box_contributor' , true);
-    $arrContributors = unserialize($strContributors);
+    
+        if($strContributors)
+            $arrContributors = unserialize($strContributors);
+        else
+            $arrContributors = array();
 
-    $users_array = get_contributors();
-    global $current_user;
-   
-    if($users_array):
-        foreach ($users_array as $strKey => $strValue) { 
-            if($current_user->ID != $strValue->ID):
-                $checked = "";
-                if(in_array($strValue->ID, $arrContributors)){
-                    $checked = "checked";
-                }
-                if($strValue->display_name){
-                    $strDisplayName = $strValue->display_name;
-                }else{
-                    $strDisplayName = $strValue->user_nicename;
-                }
-            ?>
-            <input type="checkbox" name="contributors[]" <?php echo $checked; ?> value="<?php echo $strValue->ID; ?>"><?php echo $strDisplayName; ?><br />
-        <?php endif; }
-    endif;    
+        $users_array = get_contributors();
+        $post_author = get_post_field( 'post_author', $post->ID );
+       
+        if($users_array):
+            foreach ($users_array as $strKey => $strValue) { 
+                if($post_author != $strValue->ID):
+                    $checked = "";
+                    if(in_array($strValue->ID, $arrContributors)){
+                        $checked = "checked";
+                    }
+                    if($strValue->display_name){
+                        $strDisplayName = $strValue->display_name;
+                    }else{
+                        $strDisplayName = $strValue->user_nicename;
+                    }
+                ?>
+                <input type="checkbox" name="contributors[]" <?php echo $checked; ?> value="<?php echo $strValue->ID; ?>"><?php echo $strDisplayName; ?><br />
+            <?php endif; }
+        endif;    
+    
 }
 
 add_action( 'save_post', 'meta_box_contributor_save' );
@@ -94,7 +102,8 @@ function meta_box_contributor_save( $post_id )
     if( isset( $_POST['contributors'] ) ):
         $strContributors = serialize($_POST['contributors']);
         update_post_meta( $post_id, 'meta_box_contributor', $strContributors );
-
+    elseif($_POST['contributors'] == ''):
+        update_post_meta( $post_id, 'meta_box_contributor', '');
     endif;
 
 }
